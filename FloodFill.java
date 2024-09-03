@@ -6,7 +6,7 @@ import javax.imageio.ImageIO;
 
 public class FloodFill {
 
-    public static void floodFillWithStack(BufferedImage image, int x, int y, Color newColor) {
+    public static void floodFillPilha(BufferedImage image, int x, int y, Color newColor) {
         int width = image.getWidth();
         int height = image.getHeight();
         int targetColor = image.getRGB(x, y);
@@ -17,20 +17,28 @@ public class FloodFill {
         // ponto inicial
         stack.push(new int[]{x, y});
 
-        // enquanto tiver
+        // enquanto tiver elemento, continua pintando
         while (!stack.isEmpty()) {
             int[] point = stack.pop();
+            // x é horizontal e y é vertical
             int px = point[0];
             int py = point[1];
 
+            // se o pixel não ta fora do tamanho da imagem
             if (px < 0 || px >= width || py < 0 || py >= height) continue;
+            // se o pixel nao for da cor do pixel inicial ele nao pinta
             if (image.getRGB(px, py) != targetColor) continue;
 
+            // se for da cor do inicial, pinta com a nova cor
             image.setRGB(px, py, newColor.getRGB());
 
+            // direita
             stack.push(new int[]{px + 1, py});
+            // esquerda
             stack.push(new int[]{px - 1, py});
+            // pra baixo
             stack.push(new int[]{px, py + 1});
+            // pra cima
             stack.push(new int[]{px, py - 1});
         }
     }
@@ -50,7 +58,7 @@ public class FloodFill {
             int centerY = image.getHeight() / 2;
 
             // método Flood Fill com o pixel inicial e a cor
-            floodFillWithStack(image, centerX, centerY, newColor);
+            floodFillPilha(image, centerX, centerY, newColor);
 
             // onde vai baixar a imagem
             File outputDir = new File("resources");
