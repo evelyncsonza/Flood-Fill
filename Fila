@@ -1,0 +1,46 @@
+public class Fila<T> {
+    private int top = -1; // índice do último elemento adicionado à fila. vazio
+    private int base = 0; // índice do primeiro elemento na fila
+    private T[] data; // array que armazena os elementos da fila
+
+
+    // construtor pra inicializar o array "data" com o tamanho desejado
+    public Fila(int size) {
+        this.data = (T[]) new Object[size];
+        // (T[]) transforma um array de Object em um array de tipo genérico T
+        // Pq não tem como criar direto um tipo T
+    }
+
+    // adicionar S na fila
+    public void add(T s) {
+        if (isFull()) {
+            throw new RuntimeException("Fila cheia");
+        }
+        top = (top + 1) % data.length; // garante que, se top atingir o final do array, ele volte ao início
+        data[top] = s; // S é armazenado na posição top do array data
+    }
+
+    public T remove() {
+        if (isEmpty()) {
+            throw new RuntimeException("Fila vazia");
+        }
+        T item = data[base];
+        base = (base + 1) % data.length;
+        return item;
+    }
+
+    // Os ponteiros top e base são reinicializados para seus valores iniciais.
+    public void clear() {
+        top = -1;
+        base = 0;
+        data = (T[]) new Object[data.length]; // array data é recriado com o mesmo tamanho, essencialmente limpando todos os dados existentes
+    }
+
+    public boolean isFull() {
+        return (top + 1) % data.length == base && data[base] != null; // se top = base e se base não é nula
+    }
+
+    public boolean isEmpty() {
+        return top == -1 || (base == (top + 1) % data.length && data[base] == null); // se top = -1 ou se base tá na mesma posição de top, mas base é nula
+    }
+}
