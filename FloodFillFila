@@ -1,0 +1,140 @@
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+
+public class FloodFill1 {
+
+    // Definição da classe Fila
+    public static class Fila<T> {
+        private int top = -1; // índice do último elemento adicionado à fila
+        private int base = 0; // índice do primeiro elemento na fila
+        private T[] data; // array que armazena os elementos da fila
+
+        // construtor para inicializar o array "data" com o tamanho desejado
+        public Fila(int size) {
+            this.data = (T[]) new Object[size];
+        }
+
+        // adicionar S na fila
+        public void add(T s) {
+            if (isFull()) {
+                throw new RuntimeException("Fila cheia");
+            }
+            top = (top + 1) % data.length; // garante que, se top atingir o final do array, ele volte ao início
+            data[top] = s; // S é armazenado na posição top do array data
+        }
+
+        public T remove() {
+            if (isEmpty()) {
+                throw new RuntimeException("Fila vazia");
+            }
+            T item = data[base];
+            base = (base + 1) % data.length;
+            return item;
+        }
+
+        // Os ponteiros top e base são reinicializados para seus valores iniciais
+        public void clear() {
+            top = -1;
+            base = 0;
+            data = (T[]) new Object[data.length]; // array data é recriado com o mesmo tamanho, essencialmente limpando todos os dados existentes
+        }
+
+        public boolean isFull() {
+            return (top + 1) % data.length == base && data[base] != null; // se top = base e se base não é nula
+        }
+
+        public boolean isEmpty() {
+            return top == -1 || (base == (top + 1) % data.length && data[base] == null); // se top = -1 ou se base está na mesma posição de top, mas base é nula
+        }
+    }
+
+    public static void floodFillWithQueue(BufferedImage image, int x, int y, Color newColor) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        int targetColor = image.getRGB(x, y); // cor original do ponto de partida
+        int replacementColor = newColor.getRGB(); // nova cor
+
+        if (targetColor == replacementColor) {
+            return; // se a cor inicial já é a cor de preenchimento, nada a fazer
+        }
+
+        Fila<int[]> queue = new Fila<>(width * height); // criando a fila
+        queue.add(new int[]{x, y});
+
+        int pixelsProcessed = 0;
+        int saveInterval = 560; // Número de pixels após os quais a imagem será salva
+        int step = 1; // Contador de passos para salvar imagens
+
+        File outputDir = new File("resources");
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+
+        while (!queue.isEmpty()) {
+            int[] currentPoint = queue.remove();
+            int cx = currentPoint[0];
+            int cy = currentPoint[1];
+
+            if (cx < 0 || cx >= width || cy < 0 || cy >= height) {
+                continue; // ignorar pontos fora dos limites da imagem
+            }
+
+            if (image.getRGB(cx, cy) != targetColor) {
+                continue; // ignorar se a cor não é a cor original
+            }
+
+            image.setRGB(cx, cy, replacementColor); // pintar o pixel com a nova cor
+            pixelsProcessed++;
+
+            // Adicionar os 4 vizinhos laterais à fila
+            queue.add(new int[]{cx - 1, cy});
+            queue.add(new int[]{cx + 1, cy});
+            queue.add(new int[]{cx, cy - 1});
+            queue.add(new int[]{cx, cy + 1});
+
+            // Salva a imagem a cada `saveInterval` pixels
+            if (pixelsProcessed % saveInterval == 0) {
+                File output = new File(outputDir, "filaPasso" + step + ".png");
+                try {
+                    ImageIO.write(image, "png", output);
+                    System.out.println("Imagem salva como passo" + step + ".png");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                step++;
+            }
+        }
+
+        // Salva a imagem final após o loop
+        File finalOutput = new File(outputDir, "filaPasso" + step + ".png");
+        try {
+            ImageIO.write(image, "png", finalOutput);
+            System.out.println("Imagem final salva como passo" + step + ".png");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Carregar a imagem de entrada
+            BufferedImage image = ImageIO.read(new File("C:\\Users\\evely\\OneDrive - Grupo Marista\\BES\\4P\\ESTRUTURA DE DADOS\\FloodFill\\resources/cacto.png"));
+
+            // Definir o ponto de partida (meio da imagem) e a nova cor
+            int startX = image.getWidth() / 2;
+            int startY = image.getHeight() / 2;
+            Color newColor = Color.yellow;
+
+            // Aplicar o algoritmo Flood Fill utilizando fila
+            floodFillWithQueue(image, startX, startY, newColor);
+
+            System.out.println("Processo de pintura concluído!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
