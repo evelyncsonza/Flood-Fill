@@ -3,21 +3,32 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.util.Stack;
 
 public class FloodFill {
 
-    public static void floodFillPilha(BufferedImage image, int x, int y, Color newColor) {
+    public static void floodFillPilha(BufferedImage image, int x, int y, Color newColor) throws IOException {
         int width = image.getWidth();
         int height = image.getHeight();
         int targetColor = image.getRGB(x, y);
 
         if (targetColor == newColor.getRGB()) return;
 
-        Stack<int[]> stack = new Stack<>(width * height);
+        Stack<int[]> stack = new Stack<>();
         // ponto inicial
         stack.push(new int[]{x, y});
 
         // enquanto tiver elemento, continua pintando
+        int pixelsProcessed = 0;
+        int saveInterval = 560; // Número de pixels após os quais a imagem será salva
+        int step = 1; // Contador de passos para salvar imagens
+
+        // onde vai baixar a imagem
+        File outputDir = new File("resources");
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+
         while (!stack.isEmpty()) {
             int[] point = stack.pop();
             // x é horizontal e y é vertical
@@ -31,27 +42,44 @@ public class FloodFill {
 
             // se for da cor do inicial, pinta com a nova cor
             image.setRGB(px, py, newColor.getRGB());
+            pixelsProcessed++;
 
-            // direita
+            // Empilha o pixel da direita
             stack.push(new int[]{px + 1, py});
-            // esquerda
+            // Empilha o pixel da esquerda
             stack.push(new int[]{px - 1, py});
-            // pra baixo
+            // Empilha o pixel de baixo
             stack.push(new int[]{px, py + 1});
-            // pra cima
+            // Empilha o pixel de cima
             stack.push(new int[]{px, py - 1});
+
+            // Salva a imagem a cada `saveInterval` pixels
+            if (pixelsProcessed % saveInterval == 0) {
+                File output = new File(outputDir, "pilhaPasso" + step + ".png");
+
+                // salvar a imagem colorida
+                ImageIO.write(image, "png", output);
+                System.out.println("Imagem salva como passo" + step + ".png");
+
+                step++;
+            }
         }
+
+        // Salva a imagem final após o loop
+        File finalOutput = new File(outputDir, "pilhaPasso" + step + ".png");
+        ImageIO.write(image, "png", finalOutput);
+        System.out.println("Imagem final salva como passo" + step + ".png");
     }
 
     public static void main(String[] args) {
         try {
             // caminho da imagem
-            File input = new File("C:\\Users\\evely\\OneDrive - Grupo Marista\\BES\\4P\\ESTRUTURA DE DADOS\\FloodFill/imagem.png");
+            File input = new File("C:\\Users\\evely\\OneDrive - Grupo Marista\\BES\\4P\\ESTRUTURA DE DADOS\\FloodFill\\resources/cacto.png");
             // carregar
             BufferedImage image = ImageIO.read(input);
 
-            // cor vermelha
-            Color newColor = Color.RED;
+            // cor verde
+            Color newColor = Color.GREEN;
 
             // pixel inicial
             int centerX = image.getWidth() / 2;
@@ -60,17 +88,7 @@ public class FloodFill {
             // método Flood Fill com o pixel inicial e a cor
             floodFillPilha(image, centerX, centerY, newColor);
 
-            // onde vai baixar a imagem
-            File outputDir = new File("resources");
-            if (!outputDir.exists()) {
-                outputDir.mkdirs();
-            }
-            File output = new File(outputDir, "imagem_colorida.png");
-
-            // salvar a imagem colorida
-            ImageIO.write(image, "png", output);
-
-            System.out.println("Imagem colorida e salva com sucesso!");
+            System.out.println("Processo de pintura concluído!");
 
         } catch (IOException e) {
             e.printStackTrace();
